@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Minimal Sudoku</title>
+<script>
+(function(){
+  try{
+    var stored = localStorage.getItem("minimalSudokuTheme");
+    var theme = (stored === "light" || stored === "dark")
+      ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  }catch(e){
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -40,12 +53,11 @@
     --line-box:#5B6354;
     --accent:#6FAE9E;
     --accent-strong:#8CC9BA;
-    --accent-soft:#213330;
-    --same-num:#2A413B;
-    --peer-tint:#28291F0F;
-    --peer-tint:#292B25;
+    --accent-soft:#345A50;
+    --same-num:#2E463E;
+    --peer-tint:#2C2F27;
     --error:#E28B76;
-    --error-soft:#3A2823;
+    --error-soft:#4A2F27;
     --solid-bg:#ECEDE6;
     --solid-fg:#1B1D19;
     --shadow-card: 0 1px 2px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.32);
@@ -53,6 +65,9 @@
 
   *{box-sizing:border-box;}
   html,body{height:100%;}
+  html{
+    -webkit-tap-highlight-color:transparent;
+  }
   body{
     margin:0;
     background:var(--bg);
@@ -62,6 +77,14 @@
     display:flex;
     justify-content:center;
     transition:background-color 200ms ease, color 200ms ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  button, .cell{
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+    -webkit-user-select:none;
+    user-select:none;
+    outline:none;
   }
   button{
     font-family:inherit;
@@ -120,8 +143,8 @@
     transition:background-color 160ms ease, color 160ms ease;
   }
   .diff-btn.active{
-    background:var(--ink);
-    color:#fff;
+    background:var(--solid-bg);
+    color:var(--solid-fg);
   }
   .timer{
     font-family:'Space Mono', monospace;
@@ -133,6 +156,30 @@
     text-align:right;
     font-variant-numeric: tabular-nums;
   }
+  .top-right{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .icon-btn{
+    width:32px;
+    height:32px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    background:var(--surface);
+    color:var(--ink-soft);
+    box-shadow: inset 0 0 0 1px var(--line-hair);
+    transition:background-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 100ms ease;
+  }
+  .icon-btn:active{ transform:scale(0.9); }
+  .icon-btn svg{ display:block; }
+  .icon-btn .icon-sun,
+  .icon-btn .icon-moon{ display:none; }
+  html[data-theme="light"] .icon-btn .icon-moon{ display:block; }
+  html[data-theme="dark"] .icon-btn .icon-sun{ display:block; }
 
   /* ---------- Board ---------- */
   .board-wrap{
@@ -152,6 +199,7 @@
     border-radius:var(--radius-md);
     overflow:hidden;
     box-shadow:var(--shadow-card);
+    transition:background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
   }
   .cell{
     position:relative;
@@ -162,7 +210,7 @@
     border-right:1px solid var(--line-hair);
     border-bottom:1px solid var(--line-hair);
     cursor:pointer;
-    transition:background-color 150ms ease;
+    transition:background-color 150ms ease, box-shadow 150ms ease;
   }
   .cell.br-thick{ border-right:2px solid var(--line-box); }
   .cell.bb-thick{ border-bottom:2px solid var(--line-box); }
@@ -171,8 +219,12 @@
 
   .cell.peer{ background:var(--peer-tint); }
   .cell.same-num{ background:var(--same-num); }
-  .cell.selected{ background:var(--accent-soft); }
-  .cell.selected.error{ background:var(--error-soft); }
+  .cell.selected{
+    background:var(--accent-soft);
+    box-shadow: inset 0 0 0 2px var(--accent);
+    z-index:1;
+  }
+  .cell.selected.error{ background:var(--error-soft); box-shadow: inset 0 0 0 2px var(--error); }
 
   .cell .value{
     font-family:'Space Mono', monospace;
@@ -263,8 +315,8 @@
     transition:background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
   }
   .tool-btn.active{
-    background:var(--ink);
-    color:#fff;
+    background:var(--solid-bg);
+    color:var(--solid-fg);
     box-shadow:none;
   }
   .tool-btn .dot{
@@ -303,8 +355,8 @@
     font-weight:600;
   }
   #newGameBtn{
-    background:var(--ink);
-    color:#fff;
+    background:var(--solid-bg);
+    color:var(--solid-fg);
   }
   #resetBtn{
     background:transparent;
@@ -358,8 +410,8 @@
     width:100%;
     padding:12px 0;
     border-radius:var(--radius-sm);
-    background:var(--ink);
-    color:#fff;
+    background:var(--solid-bg);
+    color:var(--solid-fg);
     font-weight:700;
     font-size:14px;
   }
@@ -385,7 +437,13 @@
         <button class="diff-btn" data-diff="medium">Medium</button>
         <button class="diff-btn" data-diff="hard">Hard</button>
       </div>
-      <div class="timer" id="timer">00:00</div>
+      <div class="top-right">
+        <div class="timer" id="timer">00:00</div>
+        <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <svg class="icon-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22"/><line x1="2" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.1" y2="4.9"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -583,6 +641,15 @@
   const winOverlay = document.getElementById("winOverlay");
   const winStats = document.getElementById("winStats");
   const winNewGame = document.getElementById("winNewGame");
+  const themeToggle = document.getElementById("themeToggle");
+
+  const THEME_KEY = "minimalSudokuTheme";
+  let currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+  themeToggle.addEventListener("click", () => {
+    currentTheme = currentTheme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", currentTheme);
+    try{ localStorage.setItem(THEME_KEY, currentTheme); }catch(e){ /* ignore */ }
+  });
 
   const cellEls = [];
   const numBtnEls = {};
