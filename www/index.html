@@ -38,8 +38,7 @@
     --error-soft:#F3E4DF;
     --solid-bg:#20241F;
     --solid-fg:#FFFFFF;
-    --radius-sm:6px;
-    --radius-md:10px;
+    --radius:14px;
     --shadow-card: 0 1px 2px rgba(32,36,31,0.04), 0 8px 24px rgba(32,36,31,0.06);
   }
 
@@ -92,6 +91,10 @@
     background:none;
     cursor:pointer;
     color:inherit;
+    transition:transform 120ms cubic-bezier(.3,.7,.4,1);
+  }
+  button:active{
+    transform:scale(0.96);
   }
   button:focus-visible, .cell:focus-visible{
     outline:2px solid var(--accent);
@@ -102,10 +105,11 @@
     width:100%;
     max-width:480px;
     min-height:100vh;
-    padding:20px 18px 24px;
+    min-height:100dvh;
+    padding:max(22px, env(safe-area-inset-top)) 18px max(26px, env(safe-area-inset-bottom));
     display:flex;
     flex-direction:column;
-    gap:18px;
+    gap:22px;
   }
 
   /* ---------- Header ---------- */
@@ -140,11 +144,14 @@
     font-weight:600;
     color:var(--muted);
     border-radius:999px;
-    transition:background-color 160ms ease, color 160ms ease;
+    transition:background-color 160ms ease, color 160ms ease, transform 120ms cubic-bezier(.3,.7,.4,1);
   }
   .diff-btn.active{
     background:var(--solid-bg);
     color:var(--solid-fg);
+  }
+  @media (hover:hover) and (pointer:fine){
+    .diff-btn:not(.active):hover{ color:var(--ink); }
   }
   .timer{
     font-family:'Space Mono', monospace;
@@ -172,9 +179,12 @@
     background:var(--surface);
     color:var(--ink-soft);
     box-shadow: inset 0 0 0 1px var(--line-hair);
-    transition:background-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 100ms ease;
+    transition:background-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 120ms cubic-bezier(.3,.7,.4,1);
   }
-  .icon-btn:active{ transform:scale(0.9); }
+  .icon-btn:active{ transform:scale(0.92); }
+  @media (hover:hover) and (pointer:fine){
+    .icon-btn:hover{ box-shadow: inset 0 0 0 1px var(--accent); color:var(--accent); }
+  }
   .icon-btn svg{ display:block; }
   .icon-btn .icon-sun,
   .icon-btn .icon-moon{ display:none; }
@@ -186,7 +196,7 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:20px;
+    gap:24px;
   }
   .board{
     width:min(100%, 440px);
@@ -196,7 +206,7 @@
     grid-template-rows:repeat(9,1fr);
     background:var(--surface);
     border:2px solid var(--line-box);
-    border-radius:var(--radius-md);
+    border-radius:var(--radius);
     overflow:hidden;
     box-shadow:var(--shadow-card);
     transition:background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
@@ -231,15 +241,16 @@
     font-size:clamp(17px,4.6vw,24px);
     font-weight:700;
     line-height:1;
-    animation:pop 160ms cubic-bezier(.2,.9,.3,1);
+    animation:pop 180ms cubic-bezier(.25,.8,.3,1);
   }
   .cell.given .value{ color:var(--ink); font-weight:700; }
   .cell.user .value{ color:var(--accent-strong); font-weight:500; }
   .cell.error .value{ color:var(--error); font-weight:500; }
 
   @keyframes pop{
-    from{ transform:scale(0.55); opacity:0; }
-    to{ transform:scale(1); opacity:1; }
+    0%{ transform:scale(0.7); opacity:0; }
+    65%{ transform:scale(1.05); opacity:1; }
+    100%{ transform:scale(1); opacity:1; }
   }
 
   .notes-grid{
@@ -266,17 +277,17 @@
     max-width:440px;
     display:flex;
     flex-direction:column;
-    gap:12px;
+    gap:14px;
   }
   .numpad{
     display:grid;
     grid-template-columns:repeat(9,1fr);
-    gap:6px;
+    gap:7px;
   }
   .num-btn{
     aspect-ratio:1;
     background:var(--surface);
-    border-radius:var(--radius-sm);
+    border-radius:var(--radius);
     box-shadow: inset 0 0 0 1px var(--line-hair);
     font-family:'Space Mono', monospace;
     font-size:16px;
@@ -285,9 +296,12 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    transition:transform 100ms ease, background-color 150ms ease, box-shadow 150ms ease;
+    transition:transform 120ms cubic-bezier(.3,.7,.4,1), background-color 150ms ease, box-shadow 150ms ease;
   }
   .num-btn:active{ transform:scale(0.92); }
+  @media (hover:hover) and (pointer:fine){
+    .num-btn:hover{ box-shadow: inset 0 0 0 1px var(--accent); }
+  }
   .num-btn.done{
     color:var(--muted);
     box-shadow:none;
@@ -298,11 +312,11 @@
   .tool-row{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:8px;
+    gap:10px;
   }
   .tool-btn{
-    padding:11px 0;
-    border-radius:var(--radius-sm);
+    padding:12px 0;
+    border-radius:var(--radius);
     background:var(--surface);
     box-shadow: inset 0 0 0 1px var(--line-hair);
     font-size:13.5px;
@@ -312,7 +326,11 @@
     align-items:center;
     justify-content:center;
     gap:6px;
-    transition:background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+    transition:background-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 120ms cubic-bezier(.3,.7,.4,1);
+  }
+  .tool-btn:active{ transform:scale(0.96); }
+  @media (hover:hover) and (pointer:fine){
+    .tool-btn:not(.active):hover{ box-shadow: inset 0 0 0 1px var(--accent); color:var(--ink); }
   }
   .tool-btn.active{
     background:var(--solid-bg);
@@ -328,7 +346,7 @@
   /* ---------- Footer ---------- */
   .bottombar{
     margin-top:auto;
-    padding-top:6px;
+    padding-top:10px;
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -350,9 +368,15 @@
   }
   .action-btn{
     padding:9px 16px;
-    border-radius:var(--radius-sm);
+    border-radius:var(--radius);
     font-size:13px;
     font-weight:600;
+    transition:background-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 120ms cubic-bezier(.3,.7,.4,1);
+  }
+  .action-btn:active{ transform:scale(0.96); }
+  @media (hover:hover) and (pointer:fine){
+    #resetBtn:hover{ box-shadow: inset 0 0 0 1px var(--accent); color:var(--ink); }
+    #newGameBtn:hover{ background:var(--accent-strong); }
   }
   #newGameBtn{
     background:var(--solid-bg);
@@ -368,7 +392,7 @@
   .win-overlay{
     position:fixed;
     inset:0;
-    background:rgba(32,36,31,0.36);
+    background:rgba(32,36,31,0.4);
     display:flex;
     align-items:center;
     justify-content:center;
@@ -376,7 +400,7 @@
     z-index:50;
     opacity:0;
     pointer-events:none;
-    transition:opacity 220ms ease;
+    transition:opacity 240ms ease;
   }
   .win-overlay.show{
     opacity:1;
@@ -384,36 +408,59 @@
   }
   .win-card{
     background:var(--surface);
-    border-radius:var(--radius-md);
+    border-radius:var(--radius);
     padding:32px 28px;
     max-width:320px;
     width:100%;
     text-align:center;
     box-shadow:0 20px 60px rgba(0,0,0,0.18);
-    transform:translateY(8px) scale(0.98);
-    transition:transform 220ms ease;
+    transform:translateY(10px) scale(0.94);
+    transition:transform 260ms cubic-bezier(.2,.9,.3,1), background-color 200ms ease;
   }
   .win-overlay.show .win-card{ transform:translateY(0) scale(1); }
   .win-card h2{
-    margin:0 0 6px;
+    margin:0 0 20px;
     font-size:20px;
     font-weight:800;
     letter-spacing:-0.01em;
   }
-  .win-card p{
-    margin:0 0 22px;
-    font-size:14px;
+  .win-stats{
+    display:flex;
+    flex-direction:column;
+    margin:0 0 24px;
+  }
+  .win-stat-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:11px 2px;
+    border-bottom:1px solid var(--line-hair);
+  }
+  .win-stat-row:last-child{ border-bottom:none; }
+  .win-stat-row .label{
+    font-size:13.5px;
+    font-weight:600;
     color:var(--muted);
+  }
+  .win-stat-row .value{
     font-family:'Space Mono', monospace;
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink);
   }
   .win-card button{
     width:100%;
     padding:12px 0;
-    border-radius:var(--radius-sm);
+    border-radius:var(--radius);
     background:var(--solid-bg);
     color:var(--solid-fg);
     font-weight:700;
     font-size:14px;
+    transition:transform 120ms cubic-bezier(.3,.7,.4,1), background-color 150ms ease;
+  }
+  .win-card button:active{ transform:scale(0.96); }
+  @media (hover:hover) and (pointer:fine){
+    .win-card button:hover{ background:var(--accent-strong); }
   }
 
   @media (prefers-reduced-motion: reduce){
@@ -470,8 +517,21 @@
 
 <div class="win-overlay" id="winOverlay">
   <div class="win-card">
-    <h2>Solved</h2>
-    <p id="winStats">00:00 · 0 mistakes</p>
+    <h2>🎉 Puzzle Complete!</h2>
+    <div class="win-stats">
+      <div class="win-stat-row">
+        <span class="label">Time</span>
+        <span class="value" id="winTime">00:00</span>
+      </div>
+      <div class="win-stat-row">
+        <span class="label">Difficulty</span>
+        <span class="value" id="winDifficulty">Medium</span>
+      </div>
+      <div class="win-stat-row">
+        <span class="label">Mistakes</span>
+        <span class="value" id="winMistakes">0</span>
+      </div>
+    </div>
     <button id="winNewGame">New Game</button>
   </div>
 </div>
@@ -639,7 +699,9 @@
   const resetBtn = document.getElementById("resetBtn");
   const diffSelector = document.getElementById("diffSelector");
   const winOverlay = document.getElementById("winOverlay");
-  const winStats = document.getElementById("winStats");
+  const winTimeEl = document.getElementById("winTime");
+  const winDifficultyEl = document.getElementById("winDifficulty");
+  const winMistakesEl = document.getElementById("winMistakes");
   const winNewGame = document.getElementById("winNewGame");
   const themeToggle = document.getElementById("themeToggle");
 
@@ -733,20 +795,33 @@
         el.classList.toggle("same-num", !!isSameNum);
         el.classList.toggle("error", !!isError);
 
+        let contentKey;
         if(val !== 0){
-          el.innerHTML = `<span class="value">${val}</span>`;
+          contentKey = "v" + val;
         } else {
           const cellNotes = notes[r][c];
-          const hasNotes = cellNotes.some(Boolean);
-          if(hasNotes){
-            let html = '<div class="notes-grid">';
-            for(let n=1;n<=9;n++){
-              html += `<span>${cellNotes[n-1] ? n : ""}</span>`;
-            }
-            html += "</div>";
-            el.innerHTML = html;
+          contentKey = "n" + cellNotes.map(b => b ? "1" : "0").join("");
+        }
+
+        // Only touch the DOM (and replay the entry animation) when the
+        // cell's actual content changed — not on every selection change.
+        if(el.dataset.ck !== contentKey){
+          el.dataset.ck = contentKey;
+          if(val !== 0){
+            el.innerHTML = `<span class="value">${val}</span>`;
           } else {
-            el.innerHTML = "";
+            const cellNotes = notes[r][c];
+            const hasNotes = cellNotes.some(Boolean);
+            if(hasNotes){
+              let html = '<div class="notes-grid">';
+              for(let n=1;n<=9;n++){
+                html += `<span>${cellNotes[n-1] ? n : ""}</span>`;
+              }
+              html += "</div>";
+              el.innerHTML = html;
+            } else {
+              el.innerHTML = "";
+            }
           }
         }
       }
@@ -770,11 +845,17 @@
     return `${m}:${s}`;
   }
 
+  function difficultyLabel(diff){
+    if(!diff) return "";
+    return diff.charAt(0).toUpperCase() + diff.slice(1);
+  }
+
   /* =========================================================
      Interactions
   ========================================================= */
   function selectCell(r,c){
     state.selected = { r, c };
+    saveState();
     render();
   }
 
@@ -819,7 +900,9 @@
     state.status = "won";
     state.selected = null;
     stopTimer();
-    winStats.textContent = `${formatTime(state.elapsed)} · ${state.mistakes} mistake${state.mistakes===1?"":"s"}`;
+    winTimeEl.textContent = formatTime(state.elapsed);
+    winDifficultyEl.textContent = difficultyLabel(state.difficulty);
+    winMistakesEl.textContent = state.mistakes;
     saveState();
   }
 
@@ -912,13 +995,13 @@
      Boot
   ========================================================= */
   const saved = loadState();
-  if(saved){
+  if(saved && saved.status === "playing"){
     state = saved;
     if(!state.notes) state.notes = freshNotes();
     render();
-    if(state.status === "playing") startTimer();
+    startTimer();
   } else {
-    startNewGame("medium");
+    startNewGame((saved && saved.difficulty) || "medium");
   }
 
 })();
