@@ -199,6 +199,32 @@
   html[data-theme="light"] .icon-btn .icon-moon{ display:block; }
   html[data-theme="dark"] .icon-btn .icon-sun{ display:block; }
 
+  .install-btn{
+    min-height:32px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    padding:0 10px;
+    border-radius:999px;
+    background:var(--surface);
+    color:var(--ink-soft);
+    box-shadow:inset 0 0 0 1px var(--line-hair);
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:0.01em;
+    white-space:nowrap;
+    transition:background-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 120ms var(--ease-press);
+  }
+  .install-btn:active{ transform:scale(0.96); }
+  .install-btn svg{ display:block; flex-shrink:0; }
+  @media (hover:hover) and (pointer:fine){
+    .install-btn:hover{
+      color:var(--accent);
+      box-shadow:inset 0 0 0 1px var(--accent);
+    }
+  }
+
   /* Difficulty selector (sliding thumb) */
   .difficulty-selector{
     position:relative;
@@ -700,6 +726,8 @@
     .bottombar{ padding-top:0; }
   }
   @media (max-width:360px){
+    .top-right{ gap:6px; }
+    .install-btn{ padding:0 8px; font-size:10px; }
     .title{ font-size:19px; }
     .num-btn{ font-size:14px; }
     .tool-row{ gap:5px; }
@@ -718,6 +746,12 @@
       <h1 class="title">Minimal Sudoku</h1>
       <div class="top-right">
         <div class="timer" id="timer">00:00</div>
+        <button class="install-btn" id="installApp" type="button" aria-label="Install Minimal Sudoku">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 17v3h14v-3"/>
+          </svg>
+          <span>Install</span>
+        </button>
         <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
           <svg class="icon-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22"/><line x1="2" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.1" y2="4.9"/></svg>
           <svg class="icon-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>
@@ -2102,30 +2136,66 @@ if ("serviceWorker" in navigator) {
   });
 }
 </script>
-<button id="installApp" hidden>
-  Install App
-</button>
-
 <script>
-let deferredInstallPrompt;
+(() => {
+  "use strict";
 
-const installButton = document.getElementById("installApp");
+  const installButton = document.getElementById("installApp");
+  let deferredInstallPrompt = null;
 
-window.addEventListener("beforeinstallprompt", event => {
-  event.preventDefault();
-  deferredInstallPrompt = event;
-  installButton.hidden = false;
-});
+  const isStandalone = () =>
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
 
-installButton.addEventListener("click", async () => {
-  if (!deferredInstallPrompt) return;
+  const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 
-  deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
+  function syncInstallButton() {
+    if (!installButton) return;
+    if (isStandalone()) {
+      installButton.hidden = true;
+      return;
+    }
+    installButton.hidden = false;
+  }
 
-  deferredInstallPrompt = null;
-  installButton.hidden = true;
-});
+  window.addEventListener("beforeinstallprompt", event => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    syncInstallButton();
+  });
+
+  window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    if (installButton) installButton.hidden = true;
+  });
+
+  if (installButton) {
+    installButton.addEventListener("click", async () => {
+      if (isStandalone()) {
+        installButton.hidden = true;
+        return;
+      }
+
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        if (choice && choice.outcome === "accepted") {
+          installButton.hidden = true;
+        }
+        return;
+      }
+
+      if (isIOS) {
+        window.alert('To install Minimal Sudoku on iPhone: tap the Share button in Safari, then choose “Add to Home Screen”.');
+      } else {
+        window.alert('To install Minimal Sudoku, open this page in Chrome and use the browser menu (⋮) → “Install app” or “Add to Home screen”.');
+      }
+    });
+  }
+
+  syncInstallButton();
+})();
 </script>
 </body>
 </html>
