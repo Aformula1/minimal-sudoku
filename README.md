@@ -4,9 +4,7 @@ A clean, elegant and minimalist Sudoku game designed for a focused puzzle-solvin
 
 Minimal Sudoku combines a simple interface with powerful gameplay features, including multiple difficulty levels, daily challenges, hints, statistics and offline support.
 
-\<p align="center">
-&#x20; \<strong>Simple design. Smart gameplay. No distractions.\</strong>
-\</p>
+**Simple design. Smart gameplay. No distractions.**
 
 ## Features
 
@@ -233,6 +231,4 @@ Planned improvements may include:
 
 ---
 
-\<p align="center">
-&#x20; Made with care for Sudoku lovers.
-\</p>
+*Made with care for Sudoku lovers.*
