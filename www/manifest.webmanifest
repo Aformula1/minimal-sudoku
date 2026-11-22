@@ -1,25 +1,42 @@
 {
+  "id": "./",
   "name": "Minimal Sudoku",
   "short_name": "Sudoku",
-  "description": "A clean, minimalist Sudoku game.",
-  "start_url": "/",
-  "scope": "/",
+  "description": "A calm, minimalist Sudoku game with daily challenges.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
-"icons": [
-  {
-    "src": "/icons/icon-192.webp",
-    "sizes": "192x192",
-    "type": "image/webp",
-    "purpose": "any"
-  },
-  {
-    "src": "/icons/icon-512.webp",
-    "sizes": "512x512",
-    "type": "image/webp",
-    "purpose": "any"
-      }
+  "orientation": "portrait",
+  "background_color": "#F3F4EF",
+  "theme_color": "#F3F4EF",
+  "categories": [
+    "games",
+    "puzzle"
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
-
