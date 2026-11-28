@@ -2,7 +2,7 @@
    Strategy: the app shell is pre-cached on install; pages are served network-first
    (so updates arrive) and fall back to the cache when offline; other same-origin
    files are served cache-first and refreshed in the background. */
-const VERSION = "2.1.0";
+const VERSION = "2.2.0";
 const CACHE = "minimal-sudoku-" + VERSION;
 const SHELL = [
   "./",

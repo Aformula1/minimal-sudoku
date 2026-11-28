@@ -33,6 +33,10 @@
     theme = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "midnight" : "classic";
   }
   document.documentElement.setAttribute("data-theme", theme);
+  try{
+    var st = JSON.parse(localStorage.getItem("minimalSudokuSettingsV1") || "null");
+    if(st && st.appearance === "glass") document.documentElement.setAttribute("data-appearance", "glass");
+  }catch(e){}
   var m = document.querySelector('meta[name="theme-color"]');
   if(m) m.setAttribute("content", COLORS[theme]);
 })();
@@ -339,7 +343,7 @@
     grid-template-rows:repeat(9,1fr);
     background:var(--surface);
     border:2px solid var(--line-box);
-    border-radius:var(--radius);
+    border-radius:0;                 /* square outer corners: corner cells highlight flush with the frame */
     overflow:hidden;
     box-shadow:var(--shadow-card);
     transition:background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
@@ -376,11 +380,17 @@
   .cell.peer{ background:var(--peer-tint); }
   .cell.same-num{ background:var(--same-num); }
   .cell.selected{
+    --ring:var(--accent);
     background:var(--accent-soft);
-    box-shadow: inset 0 0 0 2px var(--accent);
+    box-shadow: inset 0 0 0 2px var(--ring);
     z-index:1;
+    animation:selIn 170ms var(--ease-slide);
   }
-  .cell.selected.error{ background:var(--error-soft); box-shadow: inset 0 0 0 2px var(--error); }
+  .cell.selected.error{ --ring:var(--error); background:var(--error-soft); }
+  @keyframes selIn{
+    from{ box-shadow: inset 0 0 0 4px var(--ring); }
+    to{ box-shadow: inset 0 0 0 2px var(--ring); }
+  }
   .cell.hint-flash{ animation:hintRing 900ms ease-out; }
   @keyframes hintRing{
     0%{ box-shadow: inset 0 0 0 6px var(--accent); }
@@ -865,6 +875,167 @@
   .t-label{ display:block; font-size:10px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
   .t-title{ display:block; font-size:14px; font-weight:800; color:var(--ink); }
 
+  /* =========================================================
+     v2.2 additions
+  ========================================================= */
+
+  /* Automatic notes are drawn a touch lighter than notes the player wrote */
+  .notes-grid span.a{ opacity:0.62; }
+
+  /* A deleted number fades out instead of vanishing */
+  .cell .ghost{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+    font-family:'Space Mono', monospace;
+    font-size:clamp(17px,4.6vw,24px);
+    font-weight:400;
+    line-height:1;
+    color:var(--accent-strong);
+    animation:ghostOut 150ms ease-out forwards;
+  }
+  .cell .ghost.e{ color:var(--error); }
+  @keyframes ghostOut{
+    from{ opacity:0.9; transform:scale(1); }
+    to{ opacity:0; transform:scale(0.78); }
+  }
+
+  /* Personal bests */
+  .pbs{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .pb{
+    min-width:0;
+    padding:7px 10px 6px;
+    border-radius:12px;
+    box-shadow: inset 0 0 0 1px var(--line-hair);
+  }
+  .pb-top{ display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
+  .pb .pn{ font-size:12px; font-weight:700; }
+  .pb .pt{ font-family:'Space Mono', monospace; font-size:14px; font-weight:700; color:var(--accent-strong); white-space:nowrap; }
+  .pb .pt.none{ font-family:inherit; font-size:11px; font-weight:600; color:var(--muted); }
+  .pb .pd{ min-height:13px; margin-top:1px; font-size:10px; line-height:13px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  /* What's New dialog */
+  .dialog.wn{
+    max-width:340px;
+    max-height:calc(100vh - 48px);
+    max-height:calc(100dvh - 48px);
+    display:flex;
+    flex-direction:column;
+    text-align:left;
+    padding:26px 22px 20px;
+  }
+  .dialog.wn h2{ margin:0 0 14px; font-size:18px; text-align:center; }
+  .wn-list{ list-style:none; margin:0 0 18px; padding:0; overflow-y:auto; display:flex; flex-direction:column; gap:12px; }
+  .wn-list li{ position:relative; padding-left:16px; }
+  .wn-list li::before{ content:""; position:absolute; left:2px; top:6px; width:6px; height:6px; border-radius:50%; background:var(--accent); }
+  .wn-list b{ display:block; font-size:13.5px; font-weight:800; }
+  .wn-list span{ display:block; margin-top:2px; font-size:12.5px; line-height:1.4; color:var(--ink-soft); }
+
+  /* =========================================================
+     Liquid Glass appearance (opt-in; Classic is the untouched v2.1 look).
+     Implemented by re-pointing colour variables on a few containers, so every
+     existing hover / active / disabled state keeps working. The board stays solid.
+  ========================================================= */
+  :root[data-appearance="glass"]{
+    --glass-bg:rgba(255,255,255,0.56);
+    --glass-strong:rgba(255,255,255,0.80);
+    --glass-soft:rgba(255,255,255,0.42);
+    --glass-line:rgba(255,255,255,0.72);
+    --glass-edge:rgba(32,36,31,0.12);
+    --glass-shadow:0 1px 2px rgba(32,36,31,0.05), 0 10px 30px rgba(32,36,31,0.10);
+    --amb-a:rgba(60,107,98,0.16);
+    --amb-b:rgba(110,140,190,0.12);
+    --glass-blur:14px;
+  }
+  :root[data-appearance="glass"][data-theme="midnight"]{
+    --glass-bg:rgba(32,40,55,0.56); --glass-strong:rgba(26,33,46,0.82); --glass-soft:rgba(60,74,98,0.34);
+    --glass-line:rgba(255,255,255,0.13); --glass-edge:rgba(255,255,255,0.10);
+    --glass-shadow:0 1px 2px rgba(0,0,0,0.3), 0 10px 30px rgba(0,0,0,0.38);
+    --amb-a:rgba(124,183,209,0.15); --amb-b:rgba(120,100,200,0.10);
+  }
+  :root[data-appearance="glass"][data-theme="warm"]{
+    --glass-bg:rgba(251,247,238,0.60); --glass-strong:rgba(251,247,238,0.84); --glass-soft:rgba(255,252,244,0.46);
+    --glass-line:rgba(255,255,255,0.75); --glass-edge:rgba(70,50,20,0.13);
+    --glass-shadow:0 1px 2px rgba(70,50,20,0.06), 0 10px 30px rgba(70,50,20,0.10);
+    --amb-a:rgba(63,106,140,0.12); --amb-b:rgba(200,150,90,0.15);
+  }
+  :root[data-appearance="glass"][data-theme="oled"]{
+    --glass-bg:rgba(30,30,30,0.58); --glass-strong:rgba(18,18,18,0.86); --glass-soft:rgba(70,70,70,0.30);
+    --glass-line:rgba(255,255,255,0.11); --glass-edge:rgba(255,255,255,0.10);
+    --glass-shadow:0 0 0 1px rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.6);
+    --amb-a:rgba(95,196,168,0.10); --amb-b:rgba(90,90,160,0.07);
+  }
+
+  /* very soft ambient colour behind the glass (fixed layer: cheap to composite) */
+  :root[data-appearance="glass"] body::before{
+    content:"";
+    position:fixed; inset:0;
+    z-index:-1;
+    pointer-events:none;
+    background:
+      radial-gradient(70% 42% at 10% 0%, var(--amb-a), transparent 72%),
+      radial-gradient(60% 38% at 100% 100%, var(--amb-b), transparent 72%);
+  }
+
+  /* number pad + tool buttons: one frosted panel (a single blur), translucent keys on top */
+  :root[data-appearance="glass"] .controls{
+    --surface:var(--glass-soft);
+    --line-hair:var(--glass-edge);
+    width:calc(100% + 16px);
+    max-width:456px;
+    margin:0 -8px;
+    padding:8px;
+    border-radius:var(--radius-lg);
+    background:var(--glass-bg);
+    box-shadow: inset 0 0 0 1px var(--glass-line), var(--glass-shadow);
+    -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.3);
+    backdrop-filter:blur(var(--glass-blur)) saturate(1.3);
+  }
+  :root[data-appearance="glass"] .tabbar{
+    --nav-bg:var(--glass-bg);
+    --line-hair:var(--glass-line);
+    -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.5);
+    backdrop-filter:blur(var(--glass-blur)) saturate(1.5);
+  }
+  :root[data-appearance="glass"] .set-card{
+    --surface:var(--glass-bg);
+    --line-hair:var(--glass-edge);
+    box-shadow: inset 0 0 0 1px var(--glass-line), var(--glass-shadow);
+    -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.3);
+    backdrop-filter:blur(var(--glass-blur)) saturate(1.3);
+  }
+  :root[data-appearance="glass"] .dialog,
+  :root[data-appearance="glass"] .toast{
+    --surface:var(--glass-strong);
+    --line-hair:var(--glass-edge);
+    box-shadow: inset 0 0 0 1px var(--glass-line), var(--shadow-pop);
+    -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.4);
+    backdrop-filter:blur(var(--glass-blur)) saturate(1.4);
+  }
+  :root[data-appearance="glass"] .overlay{
+    -webkit-backdrop-filter:blur(5px);
+    backdrop-filter:blur(5px);
+  }
+  /* statistics: translucent only (no blur on the many small tiles) */
+  :root[data-appearance="glass"] .tile,
+  :root[data-appearance="glass"] .card,
+  :root[data-appearance="glass"] .award{
+    --surface:var(--glass-bg);
+    --line-hair:var(--glass-edge);
+    box-shadow: inset 0 0 0 1px var(--glass-line), var(--glass-shadow);
+  }
+  :root[data-appearance="glass"] .tile.hl,
+  :root[data-appearance="glass"] .award.on{ box-shadow: inset 0 0 0 1px var(--accent); }
+
+  /* No backdrop-filter support (or the user asks for less transparency): solid surfaces, same layout */
+  @supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+    :root[data-appearance="glass"][data-theme]{ --glass-bg:var(--surface); --glass-strong:var(--surface); --glass-soft:var(--surface); }
+  }
+  @media (prefers-reduced-transparency: reduce){
+    :root[data-appearance="glass"][data-theme]{ --glass-bg:var(--surface); --glass-strong:var(--surface); --glass-soft:var(--surface); }
+    :root[data-appearance="glass"] .overlay{ -webkit-backdrop-filter:none; backdrop-filter:none; }
+  }
+
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
   }
@@ -999,6 +1170,14 @@
       </div>
     </div>
 
+    <div class="set-card">
+      <h3 class="set-h">Appearance</h3>
+      <div class="theme-grid" id="appearanceGrid" role="radiogroup" aria-label="Appearance">
+        <button class="theme-opt" type="button" role="radio" aria-checked="true" data-appearance-id="classic" style="--sw-bg:#F3F4EF;--sw-surface:#FFFFFF;--sw-ink:#20241F;--sw-accent:#3C6B62"><span class="swatch"></span>Classic</button>
+        <button class="theme-opt" type="button" role="radio" aria-checked="false" data-appearance-id="glass" style="--sw-bg:linear-gradient(135deg,#C7DDD6,#E9EEF4);--sw-surface:rgba(255,255,255,0.45);--sw-ink:rgba(32,36,31,0.45);--sw-accent:#3C6B62"><span class="swatch"></span>Liquid Glass</button>
+      </div>
+    </div>
+
     <div class="set-card" id="toggleCard">
       <div class="set-row" data-setting="showTimer">
         <div><div class="set-title">Show timer</div><div class="set-desc">Display the elapsed time while you play</div></div>
@@ -1028,7 +1207,7 @@
         <button class="btn btn-sm btn-primary" id="installBtn" type="button">Install</button>
       </div>
       <p class="set-note" id="iosTip" hidden>To install on iPhone or iPad: tap the Share button in Safari, then choose <b>Add to Home Screen</b>.</p>
-      <div class="set-row static ver"><span>Minimal Sudoku</span><b id="versionLabel">v2.1</b></div>
+      <div class="set-row static ver"><span>Minimal Sudoku</span><b id="versionLabel">v2.2</b></div>
     </div>
   </section>
 </div>
@@ -1062,6 +1241,7 @@
       <div class="win-stat-row"><span class="label">Difficulty</span><span class="value" id="winDifficulty">Medium</span></div>
       <div class="win-stat-row"><span class="label">Mistakes</span><span class="value" id="winMistakes">0</span></div>
       <div class="win-stat-row"><span class="label">Hints</span><span class="value" id="winHints">0</span></div>
+      <div class="win-stat-row" id="winRecordRow" hidden><span class="label">Personal best</span><span class="value">New!</span></div>
       <div class="win-stat-row" id="winStreakRow" hidden><span class="label">Daily streak</span><span class="value" id="winStreak">1</span></div>
     </div>
     <button class="btn btn-primary btn-block" id="winNewGame" type="button">New Game</button>
@@ -1076,6 +1256,14 @@
       <button class="btn btn-secondary" id="confirmNo" type="button">Cancel</button>
       <button class="btn btn-primary" id="confirmYes" type="button">Reset</button>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="whatsNewOverlay" role="dialog" aria-modal="true" aria-labelledby="wnTitle">
+  <div class="dialog wn">
+    <h2 id="wnTitle">What's New</h2>
+    <ul class="wn-list" id="wnList"></ul>
+    <button class="btn btn-primary btn-block" id="wnOk" type="button">OK</button>
   </div>
 </div>
 
@@ -1447,20 +1635,22 @@
   /* =========================================================
      Constants, storage helpers
   ========================================================= */
-  const APP_VERSION = "2.1.0";
+  const APP_VERSION = "2.2.0";
   const KEYS = {
     game:     "minimalSudokuStateV1",   // normal game (same key as v1/v2.0, so existing progress is kept)
     daily:    "minimalSudokuDailyV1",
     stats:    "minimalSudokuStatsV1",
     theme:    "minimalSudokuTheme",     // legacy v2.0 key ("light"/"dark"), still written for compatibility
     settings: "minimalSudokuSettingsV1",
-    ach:      "minimalSudokuAchievementsV1"
+    ach:      "minimalSudokuAchievementsV1",
+    whatsNew: "minimalSudokuWhatsNewV1"     // last announcement version the player acknowledged (v2.2)
   };
   const HISTORY_LIMIT = 100;
   const DAILY_SALT = "minimal-sudoku/daily/v2/";
   // Sun..Sat: the daily puzzle's difficulty depends only on the date
   const DAILY_DIFFICULTY = ["hard","easy","medium","medium","hard","hard","expert"];
   const THEMES = ["classic","midnight","warm","oled"];
+  const APPEARANCES = ["classic","glass"];      // v2.2: Classic = the v2.1 look, Liquid Glass = translucent surfaces
   const THEME_COLORS = { classic:"#F3F4EF", midnight:"#0F131A", warm:"#F5EEDF", oled:"#000000" };
   const DARK_THEMES = ["midnight","oled"];
   const TABS = ["play","daily","stats","settings"];
@@ -1516,12 +1706,13 @@
   /* =========================================================
      Settings
   ========================================================= */
-  const DEFAULT_SETTINGS = { v:1, theme:null, showTimer:true, highlightMistakes:true, confirmReset:true, vibration:true, noteAssist:true };
+  const DEFAULT_SETTINGS = { v:1, theme:null, appearance:"classic", showTimer:true, highlightMistakes:true, confirmReset:true, vibration:true, noteAssist:true };
   const SETTING_FLAGS = ["showTimer","highlightMistakes","confirmReset","vibration","noteAssist"];
   function normalizeSettings(raw){
     const s = Object.assign({}, DEFAULT_SETTINGS);
     if(raw && typeof raw === "object"){
       if(THEMES.includes(raw.theme)) s.theme = raw.theme;
+      if(APPEARANCES.includes(raw.appearance)) s.appearance = raw.appearance;
       for(const k of SETTING_FLAGS) if(typeof raw[k] === "boolean") s[k] = raw[k];
     }
     // No saved theme: keep what the early script chose (legacy key or system preference)
@@ -1554,6 +1745,23 @@
     applyTheme(theme, true);
     renderSettings();
   }
+  function applyAppearance(appearance, animate){
+    if(!APPEARANCES.includes(appearance)) return;
+    if(animate){
+      root.classList.add("theme-anim");
+      clearTimeout(themeTimer);
+      themeTimer = setTimeout(() => root.classList.remove("theme-anim"), 360);
+    }
+    if(appearance === "glass") root.setAttribute("data-appearance", "glass");
+    else root.removeAttribute("data-appearance");
+  }
+  function setAppearance(appearance){
+    if(!APPEARANCES.includes(appearance) || appearance === settings.appearance) return;
+    settings.appearance = appearance;
+    saveSettings();
+    applyAppearance(appearance, true);
+    renderSettings();
+  }
 
   /* =========================================================
      Statistics
@@ -1564,9 +1772,10 @@
 
   function defaultStats(){
     const byDifficulty = {};
-    DIFFICULTIES.forEach(d => { byDifficulty[d] = blankDiff(); });
-    return { v:2, played:0, completed:0, totalTime:0, bestTime:null, mistakes:0, hints:0,
-             dailyCompleted:0, byDifficulty, activity:{}, activitySince:null,
+    const records = {};
+    DIFFICULTIES.forEach(d => { byDifficulty[d] = blankDiff(); records[d] = null; });
+    return { v:3, played:0, completed:0, totalTime:0, bestTime:null, mistakes:0, hints:0,
+             dailyCompleted:0, byDifficulty, records, activity:{}, activitySince:null,
              daily:{ current:0, best:0, last:null } };
   }
   function normalizeStats(raw){
@@ -1592,6 +1801,20 @@
       const e = { played:nonNeg(x.played), completed:nonNeg(x.completed), totalTime:nonNeg(x.totalTime), bestTime:validTime(x.bestTime) };
       if(e.completed > e.played) e.played = e.completed;
       s.byDifficulty[k] = e;
+    });
+    // --- fields introduced in v2.2: personal best per difficulty ---
+    // records[d] = { time, date, hints } | null. Best times already stored by v2.1 become the starting records.
+    const rr = (raw.records && typeof raw.records === "object") ? raw.records : {};
+    DIFFICULTIES.forEach(k => {
+      const x = rr[k];
+      let rec = null;
+      if(x && typeof x === "object"){
+        const t = validTime(x.time);
+        if(t) rec = { time:t, date:(parseDate(x.date) ? x.date : null), hints:(typeof x.hints === "number" ? nonNeg(x.hints) : null) };
+      }
+      const prev = s.byDifficulty[k].bestTime;
+      if(prev && (!rec || prev < rec.time)) rec = { time:prev, date:null, hints:null };
+      s.records[k] = rec;
     });
     // A v2.0 save has no per-day completion count; a streak of N proves at least N completed
     // dailies, so that is the only (guaranteed) lower bound we assume.
@@ -1642,8 +1865,10 @@
     countPlayed(game);
     saveStats();
   }
+  let recordBroken = false;          // did the most recent counted completion set a new personal best?
   // Returns true only when this completion was newly counted.
   function recordCompletion(game){
+    recordBroken = false;
     if(game.recorded) return false;
     game.recorded = true;
     if(game.mode === "daily" && dailyAlreadyDone(game.date)){ saveStats(); return false; }   // never count a daily twice
@@ -1655,6 +1880,12 @@
     bd.completed++;
     bd.totalTime += game.elapsed;
     if(bd.bestTime === null || game.elapsed < bd.bestTime) bd.bestTime = game.elapsed;
+    // personal best: only a strictly faster finished puzzle replaces the record
+    const rec = stats.records[game.difficulty];
+    if(game.elapsed > 0 && (!rec || game.elapsed < rec.time)){
+      stats.records[game.difficulty] = { time:game.elapsed, date:todayStr(), hints:game.hints };
+      recordBroken = true;
+    }
     const day = todayStr();
     stats.activity[day] = (stats.activity[day] || 0) + 1;
     pruneActivity();
@@ -1717,7 +1948,8 @@
      Game state
   ========================================================= */
   const games = { play:null, daily:null };
-  const ui = { tab:"play", busy:false, overlay:false, confirm:false, flash:-1, statsPane:"overview" };
+  const ui = { tab:"play", busy:false, overlay:false, confirm:false, whatsNew:false, flash:-1, statsPane:"overview" };
+  let animNext = false;            // true for one render after a number was deleted / undone (plays the fade-out)
   let state = null;
   let timerHandle = null;
 
@@ -1746,7 +1978,9 @@
       history: [],
       future: [],
       counted: false,
-      recorded: false
+      recorded: false,
+      autoNotes: false,                 // v2.2: Auto Notes is a switch; candidates are computed, never mixed into manual notes
+      autoOff: new Array(81).fill(0)    // v2.2: automatic candidates the player removed by hand (per cell, 9-bit mask)
     };
   }
   function createDailyGame(date){
@@ -1794,7 +2028,10 @@
       history: sanitizeHistory(raw.history),
       future: sanitizeHistory(raw.future),
       counted: !!raw.counted,
-      recorded: !!raw.recorded
+      recorded: !!raw.recorded,
+      autoNotes: !!raw.autoNotes,
+      autoOff: (Array.isArray(raw.autoOff) && raw.autoOff.length === 81 && raw.autoOff.every(v => Number.isInteger(v) && v >= 0 && v < 512))
+               ? raw.autoOff.slice() : new Array(81).fill(0)
     };
     const s = raw.selected;
     if(s && Number.isInteger(s.r) && Number.isInteger(s.c) && s.r >= 0 && s.r < 9 && s.c >= 0 && s.c < 9){
@@ -1846,6 +2083,8 @@
   const toastEl = $("toast"), toastTitle = $("toastTitle");
   const themeToggle = $("themeToggle"), themeGrid = $("themeGrid"), toggleCard = $("toggleCard");
   const vibrationDesc = $("vibrationDesc");
+  const appearanceGrid = $("appearanceGrid"), winRecordRow = $("winRecordRow");
+  const whatsNewOverlay = $("whatsNewOverlay"), wnTitle = $("wnTitle"), wnList = $("wnList"), wnOk = $("wnOk");
   const installRow = $("installRow"), installBtn = $("installBtn"), iosTip = $("iosTip"), versionLabel = $("versionLabel");
 
   const cellEls = [];
@@ -1966,7 +2205,9 @@
   }
 
   function render(){
-    const { original, current, notes, solution, selected } = state;
+    const { original, current, solution, selected } = state;
+    const anim = animNext;
+    animNext = false;
     const isDaily = state.mode === "daily";
     const playing = state.status === "playing";
     const showErrors = settings.highlightMistakes;
@@ -1981,6 +2222,8 @@
     if(isDaily) renderDailyInfo();
 
     notesBtn.classList.toggle("active", state.notesMode);
+    autoBtn.classList.toggle("active", !!state.autoNotes);
+    autoBtn.setAttribute("aria-pressed", String(!!state.autoNotes));
     mistakesEl.textContent = state.mistakes;
     mistakeStatEl.classList.toggle("mistake-flag", state.mistakes > 0);
     hintsEl.textContent = state.hints;
@@ -2005,6 +2248,7 @@
         const isSameNum = selVal !== 0 && val === selVal && !isSelected;
         const isError = showErrors && !isGiven && val !== 0 && val !== solution[r][c];
 
+        const prevKey = el.dataset.ck, wasUser = el.classList.contains("user"), wasErr = el.classList.contains("error");
         el.classList.toggle("given", isGiven && val !== 0);
         el.classList.toggle("user", !isGiven && val !== 0);
         el.classList.toggle("selected", !!isSelected);
@@ -2013,11 +2257,12 @@
         el.classList.toggle("error", !!isError);
         el.classList.toggle("hint-flash", ui.flash === r*9+c);
 
-        let contentKey;
+        let contentKey, nm = null;
         if(val !== 0){
           contentKey = "v" + val;
         } else {
-          contentKey = "n" + notes[r][c].map(b => b ? "1" : "0").join("");
+          nm = noteMasks(r*9 + c);
+          contentKey = "n" + nm.manual + "." + nm.auto;
         }
 
         // Only touch the DOM (and replay the entry animation) when the
@@ -2027,17 +2272,19 @@
           if(val !== 0){
             el.innerHTML = `<span class="value">${val}</span>`;
           } else {
-            const cellNotes = notes[r][c];
-            if(cellNotes.some(Boolean)){
+            const shown = nm.manual | nm.auto;
+            if(shown){
               let html = '<div class="notes-grid">';
               for(let n=1;n<=9;n++){
-                html += `<span>${cellNotes[n-1] ? n : ""}</span>`;
+                const bit = BIT[n];
+                html += (shown & bit) ? `<span${(nm.auto & bit) ? ' class="a"' : ""}>${n}</span>` : "<span></span>";
               }
               html += "</div>";
               el.innerHTML = html;
             } else {
               el.innerHTML = "";
             }
+            if(anim && wasUser && prevKey && prevKey.charAt(0) === "v") addGhost(el, prevKey.slice(1), wasErr);
           }
         }
       }
@@ -2152,7 +2399,16 @@
       ? (weekTotal === 0 ? "No puzzles completed in the last 7 days." : plural(weekTotal, "puzzle") + " completed in the last 7 days.")
       : `Tracking started ${shortDate(stats.activitySince)}. Earlier days aren't available.`;
 
+    const pbCells = DIFFICULTIES.map(d => {
+      const rec = stats.records[d];
+      const sub = rec ? [rec.date ? shortDate(rec.date) : "", (rec.hints ? plural(rec.hints, "hint") : "")].filter(Boolean).join(" · ") : "";
+      return `<div class="pb"><div class="pb-top"><span class="pn">${difficultyLabel(d)}</span>` +
+             (rec ? `<span class="pt">${formatTime(rec.time)}</span>` : `<span class="pt none">No record yet</span>`) +
+             `</div><div class="pd">${sub}</div></div>`;
+    }).join("");
+
     paneEls.activity.innerHTML =
+      `<div class="card"><h3 class="card-h"><span>Personal bests</span><span></span></h3><div class="pbs">${pbCells}</div></div>` +
       `<div class="card"><h3 class="card-h"><span>Completed by difficulty</span><span>Best</span></h3>${rows}${legacyNote}</div>` +
       `<div class="card"><h3 class="card-h"><span>Last 7 days</span><span>${allTracked ? weekTotal : ""}</span></h3><div class="week">${cols}</div><p class="dnote">${weekNote}</p></div>`;
 
@@ -2196,6 +2452,9 @@
     themeGrid.querySelectorAll(".theme-opt").forEach(b => {
       b.setAttribute("aria-checked", String(b.dataset.themeId === settings.theme));
     });
+    appearanceGrid.querySelectorAll(".theme-opt").forEach(b => {
+      b.setAttribute("aria-checked", String(b.dataset.appearanceId === settings.appearance));
+    });
     toggleCard.querySelectorAll(".set-row").forEach(row => {
       const key = row.dataset.setting;
       const sw = row.querySelector(".switch");
@@ -2226,6 +2485,31 @@
     const v0 = state.current[r][c], n0 = maskOf(state.notes[r][c]);
     return (v0 === v1 && n0 === n1) ? null : [i, v0, n0, v1, n1];
   }
+  // Candidates of an empty cell, from the digits currently on the board.
+  function candMaskOf(i){
+    let m = 0x1FF;
+    for(const p of PEERS[i]){
+      const v = state.current[Math.floor(p/9)][p%9];
+      if(v) m &= ~BIT[v];
+    }
+    return m;
+  }
+  // What an empty cell shows: the player's own notes (manual) plus, while Auto Notes is on,
+  // the computed candidates (auto) minus any the player removed. The two layers are never merged in storage.
+  function noteMasks(i){
+    const manual = maskOf(state.notes[Math.floor(i/9)][i%9]);
+    if(!state.autoNotes) return { manual, auto:0 };
+    const cand = candMaskOf(i);
+    state.autoOff[i] &= cand;                      // a hidden digit that stopped being a candidate is forgotten
+    return { manual, auto: cand & ~state.autoOff[i] & ~manual };
+  }
+  function addGhost(el, digit, wasErr){
+    const g = document.createElement("span");
+    g.className = "ghost" + (wasErr ? " e" : "");
+    g.textContent = digit;
+    el.appendChild(g);
+    setTimeout(() => { if(g.parentNode) g.parentNode.removeChild(g); }, 200);
+  }
   function commit(changes){
     changes = changes.filter(Boolean);
     if(!changes.length) return false;
@@ -2251,15 +2535,17 @@
     return out;
   }
   function canEdit(){
-    return !!state && (ui.tab === "play" || ui.tab === "daily") && !ui.busy && !ui.confirm && state.status === "playing";
+    return !!state && (ui.tab === "play" || ui.tab === "daily") && !ui.busy && !ui.confirm && !ui.whatsNew && state.status === "playing";
   }
 
   /* =========================================================
      Interactions
   ========================================================= */
   function selectCell(r,c){
-    if(ui.busy || ui.confirm) return;
+    if(ui.busy || ui.confirm || ui.whatsNew) return;
+    const moved = !state.selected || state.selected.r !== r || state.selected.c !== c;
     state.selected = { r, c };
+    if(moved) haptic(5);
     saveState();
     render();
   }
@@ -2274,8 +2560,15 @@
 
     if(state.notesMode){
       if(state.current[r][c] !== 0) return;                // can't note a filled cell
-      const m = maskOf(state.notes[r][c]);
-      commit([ buildChange(i, 0, m ^ BIT[n]) ]);
+      const nm = noteMasks(i);
+      let m = nm.manual;
+      if((nm.manual | nm.auto) & BIT[n]){                  // visible -> remove it
+        m &= ~BIT[n];
+        if(state.autoNotes && (candMaskOf(i) & BIT[n])) state.autoOff[i] |= BIT[n];   // hide the automatic one too
+      } else {
+        m |= BIT[n];
+      }
+      commit([ buildChange(i, 0, m) ]);
       haptic(6);
     } else {
       if(state.current[r][c] === n) return;
@@ -2301,26 +2594,25 @@
     if(!sel) return;
     const { r, c } = sel;
     if(state.original[r][c] !== 0) return;
-    if(!commit([ buildChange(r*9+c, 0, 0) ])) return;
+    const i = r*9 + c;
+    let touched = false;
+    if(state.autoNotes && state.current[r][c] === 0){        // erasing an empty cell also clears its automatic notes
+      const cand = candMaskOf(i);
+      if(cand & ~state.autoOff[i]){ state.autoOff[i] |= cand; touched = true; }
+    }
+    if(!commit([ buildChange(i, 0, 0) ]) && !touched) return;
+    animNext = true;
     haptic(8);
     saveState();
     render();
   }
 
+  // Auto Notes is a switch. On: every empty cell shows its candidates (recalculated as the board changes).
+  // Off: those automatic notes disappear; notes the player wrote are never touched.
   function autoNotes(){
     if(!canEdit()) return;
-    const changes = [];
-    for(let r=0;r<9;r++) for(let c=0;c<9;c++){
-      if(state.original[r][c] !== 0 || state.current[r][c] !== 0) continue;
-      const i = r*9 + c;
-      let m = 0x1FF;
-      for(const p of PEERS[i]){
-        const v = state.current[Math.floor(p/9)][p%9];
-        if(v) m &= ~BIT[v];
-      }
-      changes.push(buildChange(i, 0, m));
-    }
-    if(!commit(changes)) return;
+    state.autoNotes = !state.autoNotes;
+    if(state.autoNotes) state.autoOff = new Array(81).fill(0);   // switching on regenerates everything
     haptic(12);
     saveState();
     render();
@@ -2396,6 +2688,7 @@
     const entry = state.history.pop();
     for(let k=entry.length-1; k>=0; k--) setCell(entry[k][0], entry[k][1], entry[k][2]);
     state.future.push(entry);
+    animNext = true;
     if(state.future.length > HISTORY_LIMIT) state.future.shift();
     state.selected = { r:Math.floor(entry[0][0]/9), c:entry[0][0]%9 };
     haptic(6);
@@ -2407,6 +2700,7 @@
     const entry = state.future.pop();
     for(const ch of entry) setCell(ch[0], ch[3], ch[4]);
     state.history.push(entry);
+    animNext = true;
     if(state.history.length > HISTORY_LIMIT) state.history.shift();
     state.selected = { r:Math.floor(entry[0][0]/9), c:entry[0][0]%9 };
     haptic(6);
@@ -2423,6 +2717,7 @@
     winDifficultyEl.textContent = difficultyLabel(state.difficulty);
     winMistakesEl.textContent = state.mistakes;
     winHintsEl.textContent = state.hints;
+    winRecordRow.hidden = !recordBroken;
     winStreakRow.hidden = !isDaily;
     if(isDaily) winStreakEl.textContent = plural(currentStreak(todayStr()), "day");
     winNewGame.textContent = isDaily ? "Done" : "New Game";
@@ -2485,6 +2780,8 @@
     state.status = "playing";
     state.history = [];
     state.future = [];
+    state.autoNotes = false;
+    state.autoOff = new Array(81).fill(0);
     ui.overlay = false;
     saveState();
     render();
@@ -2495,7 +2792,7 @@
     stopTimer();
     if(!state || state.status !== "playing" || !(ui.tab === "play" || ui.tab === "daily")) return;
     timerHandle = setInterval(() => {
-      if(!state || state.status !== "playing" || !(ui.tab === "play" || ui.tab === "daily") || document.hidden) return;
+      if(!state || state.status !== "playing" || !(ui.tab === "play" || ui.tab === "daily") || document.hidden || ui.whatsNew) return;
       state.elapsed++;
       timerEl.textContent = formatTime(state.elapsed);
       if(state.elapsed % 5 === 0) saveState();
@@ -2599,6 +2896,54 @@
   }
 
   /* =========================================================
+     What's New — shown once per newer version
+     Add an entry to RELEASE_NOTES whenever APP_VERSION changes; players who have not
+     acknowledged that version yet see it once, then never again.
+  ========================================================= */
+  const RELEASE_NOTES = {
+    "2.2.0": [
+      ["Liquid Glass", "A new interface appearance option in Settings."],
+      ["Improved Auto Notes", "Toggle automatic candidates on and off without losing manual notes."],
+      ["Personal Bests", "Track your fastest completion times for each difficulty."],
+      ["Smoother Gameplay", "Improved animations and gentle interaction feedback."],
+      ["Visual Improvements", "Refined cell highlighting and interface transitions."]
+    ]
+  };
+  function parseVersion(v){
+    const m = /^(\d+)(?:\.(\d+))?(?:\.(\d+))?$/.exec(typeof v === "string" ? v : "");
+    return m ? [+m[1], +(m[2] || 0), +(m[3] || 0)] : null;
+  }
+  function compareVersions(a, b){
+    const x = parseVersion(a), y = parseVersion(b);
+    if(!x || !y) return 0;
+    for(let i = 0; i < 3; i++) if(x[i] !== y[i]) return x[i] < y[i] ? -1 : 1;
+    return 0;
+  }
+  function acknowledgedVersion(){
+    const w = readJSON(KEYS.whatsNew);
+    return (w && typeof w === "object" && parseVersion(w.seen)) ? w.seen : null;
+  }
+  function acknowledgeVersion(){ writeJSON(KEYS.whatsNew, { v:1, seen:APP_VERSION }); }
+  function maybeShowWhatsNew(){
+    const seen = acknowledgedVersion();
+    if(seen && compareVersions(APP_VERSION, seen) <= 0) return;   // already acknowledged this (or a newer) version
+    const items = RELEASE_NOTES[APP_VERSION];
+    if(!items){ acknowledgeVersion(); return; }                    // a version without an announcement
+    if(ui.busy || ui.confirm){ setTimeout(maybeShowWhatsNew, 800); return; }
+    wnTitle.textContent = "What\u2019s New \u2014 Version " + APP_VERSION.split(".").slice(0, 2).join(".");
+    wnList.innerHTML = items.map(it => `<li><b>${it[0]}</b><span>${it[1]}</span></li>`).join("");
+    ui.whatsNew = true;                                            // the timer pauses while the dialog is open
+    whatsNewOverlay.classList.add("show");
+    try{ wnOk.focus({ preventScroll:true }); }catch(e){ /* ignore */ }
+  }
+  function closeWhatsNew(){
+    if(!ui.whatsNew) return;
+    ui.whatsNew = false;
+    whatsNewOverlay.classList.remove("show");
+    acknowledgeVersion();
+  }
+
+  /* =========================================================
      Event bindings
   ========================================================= */
   undoBtn.addEventListener("click", undo);
@@ -2659,6 +3004,11 @@
   themeToggle.addEventListener("click", () => {
     setTheme(DARK_THEMES.includes(settings.theme) ? "classic" : "midnight");
   });
+  appearanceGrid.addEventListener("click", (e) => {
+    const b = e.target.closest(".theme-opt");
+    if(b) setAppearance(b.dataset.appearanceId);
+  });
+  wnOk.addEventListener("click", closeWhatsNew);
   themeGrid.addEventListener("click", (e) => {
     const b = e.target.closest(".theme-opt");
     if(b) setTheme(b.dataset.themeId);
@@ -2677,6 +3027,10 @@
   });
 
   document.addEventListener("keydown", (e) => {
+    if(ui.whatsNew){
+      if(e.key === "Escape" || e.key === "Enter") closeWhatsNew();
+      return;
+    }
     if(ui.confirm){
       if(e.key === "Escape") closeConfirm(false);
       return;
@@ -2731,6 +3085,7 @@
   ========================================================= */
   (function boot(){
     applyTheme(settings.theme, false);                      // sync meta theme-color + legacy key
+    applyAppearance(settings.appearance, false);
     saveSettings();
     saveStats();                                            // persists the tracking start date for new fields
     saveAch();                                              // also repairs a corrupt achievements entry
@@ -2758,6 +3113,7 @@
     renderNav("play");
     renderSettings();
     startTimer();
+    setTimeout(maybeShowWhatsNew, 400);                     // once per new version; never mid-input
   })();
 
 })();

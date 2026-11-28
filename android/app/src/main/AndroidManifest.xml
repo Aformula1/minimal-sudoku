@@ -30,4 +30,6 @@
     </application>
 
     <!-- Permissions -->
+    <!-- Lets the WebView's navigator.vibrate() work for the optional haptic feedback (normal permission, no prompt) -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 </manifest>
