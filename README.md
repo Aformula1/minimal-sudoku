@@ -24,6 +24,7 @@ Minimal Sudoku combines a simple interface with powerful gameplay features, incl
 ### Game Tools
 
 - Undo and redo.
+- Auto Notes toggle that never touches your own notes.
 - Smart hints.
 - Reset puzzle.
 - New Game.
@@ -48,6 +49,7 @@ Minimal Sudoku combines a simple interface with powerful gameplay features, incl
 - Completed puzzles.
 - Completion records.
 - Average and best times.
+- Personal best time for each difficulty.
 - Mistakes and hints tracking.
 - Daily challenge statistics.
 
@@ -56,6 +58,8 @@ Minimal Sudoku combines a simple interface with powerful gameplay features, incl
 - Minimalist interface.
 - Responsive mobile-first design.
 - Light and dark themes.
+- Classic and Liquid Glass appearance options.
+- One-time "What's New" announcement after an update.
 - Smooth interactions and animations.
 - Bottom navigation.
 - Persistent local game progress.
@@ -216,14 +220,13 @@ The project prioritizes:
 Planned improvements may include:
 
 - Additional interface themes.
-- Achievement system.
 - Expanded statistics.
 - More personalization settings.
 - Further mobile experience improvements.
 
 ## Version
 
-**Current Version:** 2.0
+**Current Version:** 2.2
 
 **Project:** Minimal Sudoku
 
